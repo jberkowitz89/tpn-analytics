@@ -45,6 +45,46 @@ def get_teams_data(query):
     
     return teams
 
+def get_draft_results(query):
+    """
+    Get draft results from Yahoo Fantasy Sports API and return as list of dictionaries.
+    
+    Args:
+        query: YahooFantasySportsQuery object
+        
+    Returns:
+        list: List of dictionaries containing draft result data
+    """
+    # Get draft results from API
+    draft_results = query.get_league_draft_results()
+    
+    # Create list to store draft result dictionaries
+    results = []
+    
+    # Process each draft result
+    for draft_result in draft_results:
+        result_dict = {}
+        
+        # Get all attributes from draft result object
+        draft_attrs = [attr for attr in dir(draft_result) if not attr.startswith('_')]
+        
+        # Extract each attribute
+        for attr in draft_attrs:
+            try:
+                # Get the attribute value if it exists
+                value = getattr(draft_result, attr)
+                # Only include if it's not a method/function
+                if not callable(value):
+                    result_dict[attr] = value
+            except AttributeError:
+                # Skip if attribute doesn't exist
+                continue
+        
+        # Add to results list
+        results.append(result_dict)
+    
+    return results
+
 if __name__ == "__main__":
     # Initialize query object
     query = YahooFantasySportsQuery(
@@ -59,10 +99,28 @@ if __name__ == "__main__":
     
     # Get teams data
     teams = get_teams_data(query)
+    draft_results = get_draft_results(query)
     
-    # Print example output
-    print("\nAvailable team attributes:")
-    print([attr for attr in teams[0].keys()])
+    # Print draft results information
+    print("\n=== DRAFT RESULTS INSPECTION ===")
+    print(f"Total draft picks: {len(draft_results)}")
+    
+    # Print available attributes for draft results
+    print("\nAvailable draft result attributes:")
+    if draft_results:
+        print(sorted(draft_results[0].keys()))
+    
+    # Print first draft pick details
+    print("\nFirst draft pick details:")
+    if draft_results:
+        first_pick = draft_results[0]
+        for key, value in first_pick.items():
+            print(f"{key}: {value}")
+    
+    # Print team information
+    print("\n=== TEAM INFORMATION ===")
+    print("Available team attributes:")
+    print(sorted([attr for attr in teams[0].keys()]))
     print("\nTeam names:")
     for team in teams:
         print(f"Team name: {team['name']}")
